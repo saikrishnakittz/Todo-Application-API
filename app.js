@@ -29,137 +29,82 @@ initialiseDbAndServer();
 
 const checkRequestQuaries = async (request, response, next) => {
   const { search_q, category, priority, status, date } = request.query;
-  const { todoId } = request.params;
-
   if (status !== undefined) {
     const statusArray = ["TO DO", "IN PROGRESS", "DONE"];
     const statusInArray = statusArray.includes(status);
     if (statusInArray === true) {
-      request.status = status;
+      next();
     } else {
       response.status(400);
       response.send("Invalid Todo Status");
     }
-  }
-
-  if (category !== undefined) {
-    const categoryArray = ["WORK", "HOME", "LEARNING"];
-    const categoryInArray = categoryArray.includes(category);
-    if (categoryInArray === true) {
-      request.category = category;
-    } else {
-      response.status(400);
-      response.send("Invalid Todo Category");
-    }
-  }
-
-  if (priority !== undefined) {
+  } else if (priority !== undefined) {
     const priorityStatus = ["HIGH", "MEDIUM", "LOW"];
     const priorityInArray = priorityStatus.includes(priority);
     if (priorityInArray === true) {
-      request.priority = priority;
+      next();
     } else {
       response.status(400);
       response.send("Invalid Todo Priority");
     }
-  }
-
-  if (date !== undefined) {
-    try {
-      const myDate = new Date(date);
-
-      const formatedDate = format(new Date(date), "yyyy-mm-dd");
-      const result = toDate(
-        new Date(
-          `${myDate.getFullYear()}-${myDate.getMonth() + 1}-${myDate.getDate()}`
-        )
-      );
-      const isValidDate = await isValid(result);
-      if (isValidDate === true) {
-        request.date = formatedDate;
-      } else {
-        response.status(400);
-        response.send("Invalid Due Date");
-        return;
-      }
-    } catch (e) {
+  } else if (category !== undefined) {
+    const categoryArray = ["WORK", "HOME", "LEARNING"];
+    const categoryInArray = categoryArray.includes(category);
+    if (categoryInArray === true) {
+      next();
+    } else {
       response.status(400);
-      response.send("Invalid Due Date");
-      return;
+      response.send("Invalid Todo Category");
     }
-    request.todoId = todoId;
-    request.search_q = search_q;
-    next();
+  } else if (date !== undefined) {
+    const isDateValid = isValid(new Date(date));
+    if (isValidDate === false) {
+      response.send(400);
+      response.send("Invalid Due Date");
+    } else {
+      next();
+    }
   }
 };
 
 const checkRequestBody = (request, response, next) => {
   const { id, todo, category, priority, status, dueDate } = request.body;
-  const { todoId } = request.params;
 
-  if (category !== undefined) {
+  if (status !== undefined) {
+    const statusArray = ["TO DO", "IN PROGRESS", "DONE"];
+    const statusInArray = statusArray.includes(status);
+    if (statusInArray === true) {
+      next();
+    } else {
+      response.status(400);
+      response.send("Invalid Todo Status");
+    }
+  } else if (priority !== undefined) {
+    const priorityStatus = ["HIGH", "MEDIUM", "LOW"];
+    const priorityInArray = priorityStatus.includes(priority);
+    if (priorityInArray === true) {
+      next();
+    } else {
+      response.status(400);
+      response.send("Invalid Todo Priority");
+    }
+  } else if (category !== undefined) {
     const categoryArray = ["WORK", "HOME", "LEARNING"];
-    const categoryIsInArray = categoryArray.includes(category);
-
-    if (categoryIsInArray === true) {
-      request.category = category;
+    const categoryInArray = categoryArray.includes(category);
+    if (categoryInArray === true) {
+      next();
     } else {
       response.status(400);
       response.send("Invalid Todo Category");
-      return;
     }
-
-    if (priority !== undefined) {
-      const priorityArray = ["HIGH", "MEDIUM", "LOW"];
-      const priorityIsInArray = priorityArray.includes(priority);
-      if (priorityIsInArray === true) {
-        request.priority = priority;
-      } else {
-        response.status(400);
-        response.send("Invalid Todo Priority");
-        return;
-      }
+  } else if (dueDate !== undefined) {
+    const isDateValid = isValid(new Date(date));
+    if (isValidDate === false) {
+      response.send(400);
+      response.send("Invalid Due Date");
+    } else {
+      next();
     }
-    if (status !== undefined) {
-      const statusArray = ["TO DO", "IN PROGRESS", "DONE"];
-      const statusIsInArray = statusArray.includes(status);
-      if (statusIsInArray === true) {
-        request.status = status;
-      } else {
-        response.status(400);
-        response.send("Invalid Todo Status");
-        return;
-      }
-    }
-
-    if (dueDate !== undefined) {
-      try {
-        const myDate = new Date(dueDate);
-        const formatedDate = format(new Date(dueDate), "yyyy-MM-dd");
-        //console.log(formatedDate);
-        const result = toDate(new Date(formatedDate));
-        const isValidDate = isValid(result);
-        // console.log(isValidDate);
-        // console.log(isValidDate);
-        if (isValidDate === true) {
-          request.dueDate = formatedDate;
-        } else {
-          response.status(400);
-          response.send("Invalid Due Date");
-          return;
-        }
-      } catch (e) {
-        response.status(400);
-        response.send("Invalid Due Date");
-        return;
-      }
-    }
-    request.todo = todo;
-    request.id = id;
-
-    request.todoId = todoId;
-
-    next();
   }
 };
 //API 1
@@ -170,7 +115,7 @@ app.get("/todos/", checkRequestQuaries, async (request, response) => {
     priority = "",
     category = "",
   } = request.query;
-  // console.log(search_q, status, priority, category);
+  console.log(search_q, status, priority, category);
   const getTodoQuery = `
             SELECT
                 id,
